@@ -494,7 +494,7 @@ public static partial class UnitTestBuilder
             case BuildTarget.StandaloneWindows64:
             case BuildTarget.WSAPlayer:
                 return ".exe";
-            case BuildTarget.StandaloneOSX:                
+            case BuildTarget.StandaloneOSX:
                 return ".app";
             case BuildTarget.Android:
                 return ".apk";
