@@ -27,6 +27,11 @@ namespace RuntimeUnitTestToolkit
         bool allTestGreen = true;
         bool logClear = false;
 
+        void Awake()
+        {
+            UnityEngine.Object.DontDestroyOnLoad(this.gameObject);
+        }
+
         void Start()
         {
             try
