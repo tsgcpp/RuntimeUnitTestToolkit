@@ -3,6 +3,8 @@
 using RuntimeUnitTestToolkit;
 using RuntimeUnitTestToolkit.Editor;
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using UnityEditor;
 using UnityEditor.Build.Reporting;
 using UnityEditor.SceneManagement;
@@ -21,6 +23,7 @@ internal class RuntimeUnitTestSettings
     public bool Headless;
     public bool AutoRunPlayer;
     public bool DisableAutoClose;
+    public bool IncludeScenesInBuild;
 
     public RuntimeUnitTestSettings()
     {
@@ -29,11 +32,12 @@ internal class RuntimeUnitTestSettings
         Headless = false;
         AutoRunPlayer = true;
         DisableAutoClose = false;
+        IncludeScenesInBuild = false;
     }
 
     public override string ToString()
     {
-        return $"{ScriptBackend} {BuildTarget} Headless:{Headless} AutoRunPlayer:{AutoRunPlayer} DisableAutoClose:{DisableAutoClose}";
+        return $"{ScriptBackend} {BuildTarget} Headless:{Headless} AutoRunPlayer:{AutoRunPlayer} DisableAutoClose:{DisableAutoClose} IncludeScenesInBuild:{IncludeScenesInBuild}";
     }
 }
 
@@ -87,6 +91,10 @@ public static partial class UnitTestBuilder
                 {
                     buildPath = cmdArgs[++i];
                 }
+                else if (string.Equals(cmdArgs[i].Trim('-', '/'), "IncludeScenesInBuild", StringComparison.OrdinalIgnoreCase))
+                {
+                    settings.IncludeScenesInBuild = true;
+                }
             }
         }
         else
@@ -123,7 +131,7 @@ public static partial class UnitTestBuilder
 
         var originalScene = SceneManager.GetActiveScene().path;
 
-        BuildUnitTest(buildPath, settings.ScriptBackend, settings.BuildTarget, settings.Headless, settings.AutoRunPlayer, settings.DisableAutoClose);
+        BuildUnitTest(buildPath, settings.ScriptBackend, settings.BuildTarget, settings.Headless, settings.AutoRunPlayer, settings.DisableAutoClose, settings.IncludeScenesInBuild);
 
         // reopen original scene
         if (!string.IsNullOrWhiteSpace(originalScene))
@@ -174,6 +182,7 @@ public static partial class UnitTestBuilder
                 UseCurrentScriptBackend = true,
                 Headless = false,
                 AutoRunPlayer = true,
+                IncludeScenesInBuild = false,
             };
         }
 
@@ -186,7 +195,7 @@ public static partial class UnitTestBuilder
         EditorPrefs.SetString(key, JsonUtility.ToJson(settings));
     }
 
-    public static void BuildUnitTest(string buildPath, ScriptingImplementation scriptBackend, BuildTarget buildTarget, bool headless, bool autoRunPlayer, bool disableAutoClose)
+    public static void BuildUnitTest(string buildPath, ScriptingImplementation scriptBackend, BuildTarget buildTarget, bool headless, bool autoRunPlayer, bool disableAutoClose, bool includeScenesInBuild)
     {
         var sceneName = "Assets/TempRuntimeUnitTestScene_" + DateTimeOffset.UtcNow.ToUnixTimeSeconds();
         if (disableAutoClose)
@@ -204,7 +213,7 @@ public static partial class UnitTestBuilder
         EditorSceneManager.SaveScene(scene, sceneName, false);
         try
         {
-            Build(sceneName, buildPath, new RuntimeUnitTestSettings { ScriptBackend = scriptBackend, BuildTarget = buildTarget, Headless = headless, AutoRunPlayer = autoRunPlayer, DisableAutoClose = disableAutoClose });
+            Build(sceneName, buildPath, new RuntimeUnitTestSettings { ScriptBackend = scriptBackend, BuildTarget = buildTarget, Headless = headless, AutoRunPlayer = autoRunPlayer, DisableAutoClose = disableAutoClose, IncludeScenesInBuild = includeScenesInBuild });
         }
         finally
         {
@@ -410,12 +419,24 @@ public static partial class UnitTestBuilder
             PlayerSettings.SetScriptingBackend(targetGroup, settings.ScriptBackend);
         }
 
+        string[] scenes;
+        if (settings.IncludeScenesInBuild)
+        {
+            var sceneList = new List<string> { sceneName };
+            sceneList.AddRange(EditorBuildSettings.scenes.Select(s => s.path).ToList());
+            scenes = sceneList.ToArray();
+        }
+        else
+        {
+            scenes = new string[] { sceneName };
+        }
+
         var buildOptions = new BuildPlayerOptions
         {
             target = settings.BuildTarget,
             targetGroup = targetGroup,
             options = options,
-            scenes = new[] { sceneName },
+            scenes = scenes,
             locationPathName = buildPath
         };
 
