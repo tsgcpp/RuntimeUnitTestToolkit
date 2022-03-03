@@ -82,6 +82,21 @@ public static partial class UnitTestBuilder
         SaveSettings(settings);
     }
 
+    [MenuItem("Test/Settings/IncludeScenesInBuild", validate = true, priority = 6)]
+    static bool ValidateIncludeScenesInBuild()
+    {
+        Menu.SetChecked("Test/Settings/IncludeScenesInBuild", LoadOrGetDefaultSettings().IncludeScenesInBuild);
+        return true;
+    }
+
+    [MenuItem("Test/Settings/IncludeScenesInBuild", validate = false, priority = 6)]
+    static void IncludeScenesInBuild()
+    {
+        var settings = LoadOrGetDefaultSettings();
+        settings.IncludeScenesInBuild = !settings.IncludeScenesInBuild;
+        SaveSettings(settings);
+    }
+
     // generated
 
     /*
