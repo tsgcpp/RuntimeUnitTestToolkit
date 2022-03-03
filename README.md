@@ -65,6 +65,7 @@ You can invoke `-executeMethod UnitTestBuilder.BuildUnitTest` and some options.
 | **/scriptBackend** ScriptingImplementation | Enum string(`Mono2x` or `IL2CPP` or `WinRTDotNET` )|
 | **/buildTarget** BuildTarget   |Enum string(`StandaloneWindows64`, `StandaloneLinux64`, `StandaloneOSX`, `iOS`, `Android`, etc...) | 
 | **/buildPath** FilePath    | String path. Default is `bin/UnitTest/{BuildTarget}_{ScriptBackend}/test`(If windows `test.exe`, Android `test.apk`, OSX `test.app`) |
+| **/includeScenesInBuild** | Boolean switch, build with scenes in Build Settings. Default is false and build only RuntimeUnitTestScene |
 
 You can pass by `/` prefix.
 
